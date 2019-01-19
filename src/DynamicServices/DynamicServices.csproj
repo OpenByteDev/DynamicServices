@@ -7,16 +7,18 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>OpenByte</Authors>
+    <Authors>OpenByteDev</Authors>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/OpenByteDev/DynamicServices</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OpenByteDev/DynamicServices</RepositoryUrl>
-    <PackageLicenseUrl>https://github.com/OpenByteDev/DynamicServices/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <NeutralLanguage />
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
-    <PackageTags>Messaging</PackageTags>
+    <PackageTags></PackageTags>
+    <Company>OpenByteDev</Company>
+    <Version>0.1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
