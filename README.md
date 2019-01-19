@@ -1,5 +1,10 @@
 # DynamicServices
 
+[![NetMQ NuGet version](https://img.shields.io/nuget/v/DynamicServices.svg)](https://www.nuget.org/packages/DynamicServices/)
+
+## Installation
+
+You can download DynamicServices via [NuGet](https://nuget.org/packages/DynamicServices/).
 
 
 #### Client - Host
