@@ -1,5 +1,4 @@
 ﻿using Castle.DynamicProxy;
-using MessagePack;
 using NetMQ;
 using NetMQ.Sockets;
 
@@ -22,10 +21,8 @@ namespace DynamicServices {
 
         private void Queue_ReceiveReady(object sender, NetMQQueueEventArgs<IInvocation> e) =>
             HandleQueueItem(e.Queue.Dequeue());
-        protected void HandleQueueItem(IInvocation invocation) {
-            var request = InvocationRequest.From(invocation);
-            TrySendMultipartBytes(request.Service, MessagePackSerializer.Serialize(request));
-        }
+        protected void HandleQueueItem(IInvocation invocation) =>
+            TrySendInvocation(invocation);
             
 
     }

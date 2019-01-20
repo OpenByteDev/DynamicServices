@@ -1,11 +1,9 @@
 ﻿using Castle.DynamicProxy;
 using DynamicServices.Exceptions;
 using MessagePack;
-using MessagePack.Resolvers;
 using NetMQ;
 using NetMQ.Sockets;
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using static DynamicServices.ServiceMethod;
@@ -64,9 +62,8 @@ namespace DynamicServices {
         // private static readonly MethodInfo _Deserializer = typeof(MessagePackSerializer).GetMethod("Deserialize", new Type[] { typeof(byte[]) });
         protected void HandleQueueItem(in (IInvocation, TaskCompletionSource<object>) e) {
             var (invocation, source) = e;
-            
-            var request = InvocationRequest.From(invocation);
-            if (!TrySendFrameBytes(MessagePackSerializer.Serialize(request), source))
+
+            if (!TrySendInvocation(invocation, source))
                 return;
 
             if (source is null || source.Task.IsCompleted)

@@ -1,4 +1,5 @@
-﻿using Castle.DynamicProxy;
+﻿/*
+using Castle.DynamicProxy;
 using DynamicServices.Utils;
 using MessagePack;
 using System;
@@ -44,3 +45,4 @@ namespace DynamicServices {
 
     }
 }
+*/

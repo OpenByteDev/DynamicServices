@@ -1,4 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections;
+using System.Threading.Tasks;
 
 namespace DynamicServices.Tests {
     [TestClass]
@@ -18,12 +21,16 @@ namespace DynamicServices.Tests {
                     var service = client.GetServiceProxy<IEchoService>();
                     client.Start();
 
+                    EchoTest(42);
+                    EchoTest(42424242424242L);
+                    EchoTest(42.42f);
+                    EchoTest(new byte[] { 1, 2, 3, 4, 5 });
                     EchoTest("fejkfehsjkfeshjkhjkfhesjkfhjkh");
                     EchoTest("̀(╯°□°）╯︵ ┻━┻");
-
-                    void EchoTest(string value) {
+                    EchoTest(("fhefshj", 42));
+                    void EchoTest(object value) {
                         var echo = service.Echo(value);
-                        Assert.AreEqual(value, echo);
+                        Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo));
                     }
 
                     client.Shutdown();
@@ -32,14 +39,55 @@ namespace DynamicServices.Tests {
             }
         }
 
-        public class EchoService : IEchoService {
+        [TestMethod]
+        public async Task AsyncClientHost() {
+            DynamicServicesConfig.DefaultInvocationTimeout = TimeSpan.FromSeconds(10000);
+            DynamicServicesConfig.DefaultSendReceiveTimeout = TimeSpan.FromSeconds(10000);
 
-            public string Echo(string text) => text;
+            var address = @"localhost";
+            using (var host = new ServiceHost()) {
+                var port = host.BindRandomPort(address);
+                host.RegisterService<EchoService>();
+                host.Start();
+                using (var client = new ServiceClient()) {
+                    client.Connect(address, port);
+                    var service = client.GetServiceProxy<IEchoService>();
+                    client.Start();
+
+                    await EchoTest(42);
+                    await EchoTest(new byte[] { 1, 2, 3, 4, 5 });
+                    await EchoTest("̀(╯°□°）╯︵ ┻━┻");
+
+                    async Task EchoTest(object value) {
+                        var echo = await service.EchoAsync(value);
+                        Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo));
+                        var echo2 = await service.EchoAsync2(value);
+                        Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo2));
+                    }
+
+                    client.Shutdown();
+                }
+                host.Shutdown();
+            }
+        }
+
+
+        public class EchoService : IEchoService {
+            
+            public object Echo(object obj) => obj;
+
+            public async Task<object> EchoAsync(object obj) {
+                await Task.Delay(10);
+                return obj;
+            }
+            public ValueTask<object> EchoAsync2(object obj) => new ValueTask<object>(obj);
 
         }
         public interface IEchoService {
 
-            string Echo(string text);
+            object Echo(object obj);
+            Task<object> EchoAsync(object obj);
+            ValueTask<object> EchoAsync2(object obj);
 
         }
 

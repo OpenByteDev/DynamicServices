@@ -1,4 +1,7 @@
-﻿using DynamicServices.Exceptions;
+﻿using Castle.DynamicProxy;
+using DynamicServices.Exceptions;
+using DynamicServices.Utils;
+using MessagePack;
 using NetMQ;
 using System;
 using System.Collections.Generic;
@@ -128,36 +131,20 @@ namespace DynamicServices {
                 return false;
             }
         }
-        protected bool TryReceiveFrameBytes(out byte[] frame) {
-            if (Socket.TryReceiveFrameBytes(SendReceiveTimeout, out frame))
-                return true;
-            else {
-                HandleError(new ReceiveTimeoutException());
-                return false;
-            }
-        }
-        protected bool TrySendMultipartBytes(params byte[][] frames) {
-            if (Socket.TrySendMultipartBytes(SendReceiveTimeout, frames))
-                return true;
-            else {
-                HandleError(new SendTimeoutException());
-                return false;
-            }
-        }
-        protected bool TrySendFrameBytes(byte[] frame) {
-            if (Socket.TrySendFrame(SendReceiveTimeout, frame))
-                return true;
-            else {
-                HandleError(new SendTimeoutException());
-                return false;
-            }
-        }
         protected bool TryReceiveMultipartBytes<T>(out List<byte[]> frames, int expectedFrameCount, TaskCompletionSource<T> completionSource) {
             frames = new List<byte[]>();
             if (Socket.TryReceiveMultipartBytes(SendReceiveTimeout, ref frames, expectedFrameCount))
                 return true;
             else {
                 HandleError(new SendTimeoutException(), completionSource);
+                return false;
+            }
+        }
+        protected bool TryReceiveFrameBytes(out byte[] frame) {
+            if (Socket.TryReceiveFrameBytes(SendReceiveTimeout, out frame))
+                return true;
+            else {
+                HandleError(new ReceiveTimeoutException());
                 return false;
             }
         }
@@ -169,11 +156,27 @@ namespace DynamicServices {
                 return false;
             }
         }
+        protected bool TrySendMultipartBytes(params byte[][] frames) {
+            if (Socket.TrySendMultipartBytes(SendReceiveTimeout, frames))
+                return true;
+            else {
+                HandleError(new SendTimeoutException());
+                return false;
+            }
+        }
         protected bool TrySendMultipartBytes<T>(byte[][] frames, TaskCompletionSource<T> completionSource) {
             if (Socket.TrySendMultipartBytes(SendReceiveTimeout, frames))
                 return true;
             else {
                 HandleError(new SendTimeoutException(), completionSource);
+                return false;
+            }
+        }
+        protected bool TrySendFrameBytes(byte[] frame) {
+            if (Socket.TrySendFrame(SendReceiveTimeout, frame))
+                return true;
+            else {
+                HandleError(new SendTimeoutException());
                 return false;
             }
         }
@@ -185,7 +188,25 @@ namespace DynamicServices {
                 return false;
             }
         }
-        protected void HandleError(Exception exception = null) {
+
+        protected bool TrySendInvocation(IInvocation invocation) =>
+            TrySendMultipartBytes(ServiceUtils.SerializeInvocation(invocation));
+        protected bool TrySendInvocation<T>(IInvocation invocation, TaskCompletionSource<T> completionSource) =>
+            TrySendMultipartBytes(ServiceUtils.SerializeInvocation(invocation), completionSource);
+        protected bool TryReceiveInvocation(out byte[] service, out byte[] method, out object[] arguments) {
+            if (TryReceiveMultipartBytes(out List<byte[]> frames, 3)) {
+                ServiceUtils.DeserializeInvocation(frames, out service, out method, out arguments);
+                return true;
+            }
+            service = null;
+            method = null;
+            arguments = null;
+            return false;
+        }
+        protected bool TryReceiveInvocation<T>(IInvocation invocation, TaskCompletionSource<T> completionSource) =>
+            TrySendMultipartBytes(ServiceUtils.SerializeInvocation(invocation), completionSource);
+
+        protected void HandleError(Exception exception) {
             switch (ErrorAction) {
                 case ErrorAction.Silent:
                     break;
@@ -193,10 +214,9 @@ namespace DynamicServices {
                     throw exception ?? new Exception(@"An unknown error occured.");
             }
         }
-        protected void HandleError<T>(Exception exception, TaskCompletionSource<T> completionSource) {
-            completionSource?.TrySetException(exception);
-            HandleError(exception);
-        }
+        protected void HandleError<T>(Exception exception, TaskCompletionSource<T> completionSource) =>
+            completionSource?.TrySetException(exception ?? new Exception(@"An unknown error occured."));
+        
         #endregion
 
         #region IDisposable Support

@@ -1,8 +1,6 @@
 ﻿using DynamicServices.Exceptions;
-using MessagePack;
 using NetMQ;
 using NetMQ.Sockets;
-using System.Collections.Generic;
 using static DynamicServices.ServiceMethod;
 
 namespace DynamicServices {
@@ -22,9 +20,9 @@ namespace DynamicServices {
                 throw new ResponseTypeNotSupportedException(method.ResponseType, @"Subscription service methods must return void.");
         }
 
-        protected override void RegisterService(byte[] signature, IDictionary<byte[], ServiceMethod> methods) {
-            base.RegisterService(signature, methods);
-            ((SubscriberSocket)Socket).Subscribe(signature);
+        protected override void RegisterService(byte[] serviceSignature, byte[] methodSignature, ServiceMethod serviceMethod) {
+            base.RegisterService(serviceSignature, methodSignature, serviceMethod);
+            ((SubscriberSocket)Socket).Subscribe(serviceSignature);
         }
 
         protected override bool UnregisterService(byte[] service) {
@@ -37,14 +35,8 @@ namespace DynamicServices {
 
         private void Socket_ReceiveReady(object sender, NetMQSocketEventArgs e) => SocketReceiveReady();
         protected void SocketReceiveReady() {
-            if (!TryReceiveMultipartBytes(out List<byte[]> frames, 2))
-                return;
-            var request = MessagePackSerializer.Deserialize<InvocationRequest>(frames[1]);
-
-            if (GetServiceMethod(request) is ServiceMethod method)
-                method.Invoke(request.Arguments);
-            else HandleError(new MethodNotRegisteredException());
+            if (TryReceiveInvocation(out byte[] service, out byte[] method, out object[] arguments))
+                InvokeServiceMethod(service, method, arguments);
         }
-
     }
 }

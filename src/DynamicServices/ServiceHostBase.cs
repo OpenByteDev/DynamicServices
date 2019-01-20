@@ -1,4 +1,5 @@
-﻿using DynamicServices.Utils;
+﻿using DynamicServices.Exceptions;
+using DynamicServices.Utils;
 using NetMQ;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Reflection;
 namespace DynamicServices {
     public abstract class ServiceHostBase : ServiceSocketBase, IServiceHost {
 
-        protected readonly IDictionary<byte[], IDictionary<byte[], ServiceMethod>> Services = new Dictionary<byte[], IDictionary<byte[], ServiceMethod>>(StructuralEqualityComparer<byte[]>.Default);
+        protected readonly IDictionary<byte[], ServiceMethod> Services = new Dictionary<byte[], ServiceMethod>(StructuralEqualityComparer<byte[]>.Default);
 
         public ServiceHostBase(NetMQSocket socket) : base(socket) { }
 
@@ -31,17 +32,16 @@ namespace DynamicServices {
             RegisterService(service, signature, methods);
         }
         protected void RegisterService(object service, byte[] serviceSignature, MethodInfo[] methods) {
-            var dictionary = new Dictionary<byte[], ServiceMethod>(StructuralEqualityComparer<byte[]>.Default);
             foreach (var method in methods) {
                 var methodSignature = ServiceUtils.GetMethodSignature(method);
                 var serviceMethod = new ServiceMethod(method, service);
                 CheckServiceMethod(serviceMethod);
-                dictionary.Add(methodSignature, serviceMethod);
+                RegisterService(serviceSignature, methodSignature, serviceMethod);
             }
-            RegisterService(serviceSignature, dictionary);
         }
-        protected virtual void RegisterService(byte[] serviceSignature, IDictionary<byte[], ServiceMethod> methods) =>
-            Services.Add(serviceSignature, methods);
+        protected virtual void RegisterService(byte[] serviceSignature, byte[] methodSignature, ServiceMethod serviceMethod) =>
+            Services.Add(ServiceUtils.CombineSignatures(serviceSignature, methodSignature), serviceMethod);
+
         protected virtual void CheckServiceType(Type service) { }
         protected virtual void CheckServiceMethod(in ServiceMethod method) {
             var parameters = method.MethodInfo.GetParameters();
@@ -64,14 +64,26 @@ namespace DynamicServices {
         }
         protected virtual bool UnregisterService(byte[] service) => Services.Remove(service);
 
-        protected ServiceMethod? GetServiceMethod(in InvocationRequest request) =>
-            GetServiceMethod(request.Service, request.Method);
+        // protected ServiceMethod? GetServiceMethod(in InvocationRequest request) =>
+        //    GetServiceMethod(request.Service, request.Method);
 
-        protected ServiceMethod? GetServiceMethod(byte[] service, byte[] method) {
-            if (Services.TryGetValue(service, out IDictionary<byte[], ServiceMethod> methods) &&
-                methods.TryGetValue(method, out ServiceMethod serviceMethod))
+        protected ServiceMethod? GetServiceMethod(byte[] service, byte[] method) =>
+            GetServiceMethod(ServiceUtils.CombineSignatures(service, method));
+        protected ServiceMethod? GetServiceMethod(byte[] signature) {
+            if (Services.TryGetValue(signature, out ServiceMethod serviceMethod))
                 return serviceMethod;
             return null;
         }
+        protected bool InvokeServiceMethod(byte[] service, byte[] method, object[] arguments, out object result) {
+            if (GetServiceMethod(service, method) is ServiceMethod serviceMethod) {
+                result = serviceMethod.Invoke(arguments);
+                return true;
+            }
+            result = null;
+            HandleError(new MethodNotRegisteredException());
+            return false;
+        }
+        protected bool InvokeServiceMethod(byte[] service, byte[] method, object[] arguments) =>
+            InvokeServiceMethod(service, method, arguments, out object result);
     }
 }

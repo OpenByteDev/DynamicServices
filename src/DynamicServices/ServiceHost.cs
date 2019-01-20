@@ -1,10 +1,8 @@
 ﻿using DynamicServices.Exceptions;
 using MessagePack;
-using MessagePack.Resolvers;
 using NetMQ;
 using NetMQ.Sockets;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using static DynamicServices.ServiceMethod;
 
@@ -23,60 +21,47 @@ namespace DynamicServices {
 
         private void Socket_ReceiveReady(object sender, NetMQSocketEventArgs e) => SocketReceiveReady();
         protected void SocketReceiveReady() {
-            if (!TryReceiveMultipartBytes(out List<byte[]> frames, 2))
+            if (!TryReceiveFrameBytes(out byte[] connection) ||
+                !TryReceiveInvocation(out byte[] service, out byte[] method, out object[] arguments))
                 return;
 
-            var connection = frames[0];
-            var message = frames[1];
-            var (service, method, arguments) = MessagePackSerializer.Deserialize<InvocationRequest>(message);
             if (!(GetServiceMethod(service, method) is ServiceMethod serviceMethod)) {
                 HandleError(new MethodNotRegisteredException());
                 return;
             }
 
-            var result = serviceMethod.Invoke(arguments);
-            object _result = null;
+            var result = InvoceServiceMethod(serviceMethod, arguments);
 
-            switch (GetResponseType(serviceMethod)) {
+            if (!(result is null))
+                TrySendMultipartBytes(connection, MessagePackSerializer.Typeless.Serialize(result));
+        }
+
+        private object InvoceServiceMethod(ServiceMethod serviceMethod, object[] arguments) {
+            switch (serviceMethod.ResponseType) {
                 case MethodResponseType.None:
-                    return;
+                    return null;
+                case MethodResponseType.Sync:
+                    return serviceMethod.Invoke(arguments);
                 case MethodResponseType.Async:
-                    var task = result as Task;
-                    if (task.Status == TaskStatus.RanToCompletion)
-                        break;
-                    else if (task.IsFaulted) {
-                        HandleError(task.Exception);
-                        return;
-                    }
-                    else if (task.Wait(InvocationTimeout))
-                        break;
+                    var task = Task.Run(async () => await (Task)serviceMethod.Invoke(arguments));
+                    if (task.Wait(InvocationTimeout))
+                        return null;
                     else {
                         HandleError(task.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
-                        return;
+                        return null;
                     }
                 case MethodResponseType.AsyncWithResult:
-                    var taskWithResult = result as Task<object>;
-                    if (taskWithResult.Status == TaskStatus.RanToCompletion)
-                        _result = taskWithResult.Result;
-                    else if (taskWithResult.IsFaulted) {
-                        HandleError(taskWithResult.Exception);
-                        return;
-                    } else if (taskWithResult.Wait(InvocationTimeout))
-                        _result = taskWithResult.Result;
+                    var taskWithResult = Task.Run(async () => await (Task<object>)serviceMethod.Invoke(arguments));
+                    if (taskWithResult.Wait(InvocationTimeout))
+                        return taskWithResult.Result;
                     else {
                         HandleError(taskWithResult.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
-                        return;
+                        return null;
                     }
-                    break;
-                case MethodResponseType.Sync:
-                    _result = result;
-                    break;
-                case var responseType:
-                    HandleError(new ResponseTypeNotSupportedException(responseType));
-                    return;
+                default:
+                    HandleError(new ResponseTypeNotSupportedException(serviceMethod.ResponseType));
+                    return null;
             }
-
-            TrySendMultipartBytes(connection, MessagePackSerializer.Typeless.Serialize(_result));
         }
 
     }

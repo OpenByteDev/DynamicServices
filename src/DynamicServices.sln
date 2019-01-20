@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicServices", "DynamicServices\DynamicServices.csproj", "{F8452DDB-5F24-44C5-8F15-BDA99BFE5158}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicServices.Tests", "DynamicServices.Tests\DynamicServices.Tests.csproj", "{F1C3864D-9946-4C50-BE66-9995B76D58E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicServices.Tests", "DynamicServices.Tests\DynamicServices.Tests.csproj", "{F1C3864D-9946-4C50-BE66-9995B76D58E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
