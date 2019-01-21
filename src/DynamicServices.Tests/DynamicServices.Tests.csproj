@@ -6,6 +6,8 @@
     <IsPackable>false</IsPackable>
 
     <StartupObject></StartupObject>
+
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

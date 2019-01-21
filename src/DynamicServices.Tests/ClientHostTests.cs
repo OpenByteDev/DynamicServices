@@ -41,9 +41,6 @@ namespace DynamicServices.Tests {
 
         [TestMethod]
         public async Task AsyncClientHost() {
-            DynamicServicesConfig.DefaultInvocationTimeout = TimeSpan.FromSeconds(10000);
-            DynamicServicesConfig.DefaultSendReceiveTimeout = TimeSpan.FromSeconds(10000);
-
             var address = @"localhost";
             using (var host = new ServiceHost()) {
                 var port = host.BindRandomPort(address);
@@ -71,9 +68,8 @@ namespace DynamicServices.Tests {
             }
         }
 
-
         public class EchoService : IEchoService {
-            
+
             public object Echo(object obj) => obj;
 
             public async Task<object> EchoAsync(object obj) {
@@ -90,6 +86,7 @@ namespace DynamicServices.Tests {
             ValueTask<object> EchoAsync2(object obj);
 
         }
+
 
     }
 }

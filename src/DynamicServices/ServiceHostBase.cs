@@ -4,6 +4,7 @@ using NetMQ;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace DynamicServices {
     public abstract class ServiceHostBase : ServiceSocketBase, IServiceHost {
@@ -23,8 +24,9 @@ namespace DynamicServices {
                 RegisterService(service, i);
         }
         protected void RegisterService(object service, Type @interface) {
-            var signature = ServiceUtils.GetTypeSignature(@interface);
             CheckServiceType(@interface);
+
+            var signature = ServiceUtils.GetTypeSignature(@interface);
             var methods = @interface.GetMethods();
             if (methods.Length == 0)
                 return;
@@ -32,6 +34,7 @@ namespace DynamicServices {
             RegisterService(service, signature, methods);
         }
         protected void RegisterService(object service, byte[] serviceSignature, MethodInfo[] methods) {
+            CheckService(service, serviceSignature);
             foreach (var method in methods) {
                 var methodSignature = ServiceUtils.GetMethodSignature(method);
                 var serviceMethod = new ServiceMethod(method, service);
@@ -43,6 +46,10 @@ namespace DynamicServices {
             Services.Add(ServiceUtils.CombineSignatures(serviceSignature, methodSignature), serviceMethod);
 
         protected virtual void CheckServiceType(Type service) { }
+        protected virtual void CheckService(object service, byte[] serviceSignature) {
+            if (Services.Keys.Any(e => e.Take(serviceSignature.Length).SequenceEqual(serviceSignature)))
+                throw new InvalidOperationException(@"Service method is already registered.");
+        }
         protected virtual void CheckServiceMethod(in ServiceMethod method) {
             var parameters = method.MethodInfo.GetParameters();
             foreach (var parameter in parameters)
@@ -50,9 +57,9 @@ namespace DynamicServices {
         }
         protected virtual void CheckServiceMethodParameter(in ServiceMethod method, ParameterInfo parameter) {
             if (parameter.HasDefaultValue)
-                throw new NotSupportedException(@"Service methods cannot have default parameters");
+                throw new NotSupportedException(@"Service methods cannot have default parameters.");
             if (parameter.IsIn || parameter.IsOut || parameter.IsRetval || parameter.IsOptional || parameter.ParameterType.IsByRef)
-                throw new NotSupportedException(@"Service methods cannot have in, out, retval, optional or ref parameters");
+                throw new NotSupportedException(@"Service methods cannot have in, out, retval, optional or ref parameters.");
         }
 
         public bool UnregisterService(Type service) {
@@ -62,7 +69,12 @@ namespace DynamicServices {
                 return UnregisterService(ServiceUtils.GetTypeSignature(service));
             return this.UnregisterService(service.GetInterfaces());
         }
-        protected virtual bool UnregisterService(byte[] service) => Services.Remove(service);
+        protected virtual bool UnregisterService(byte[] service) {
+            var methods = Services.Keys.Where(e => service.SequenceEqual(e.Take(service.Length))).ToArray();
+            foreach (var signature in methods)
+                Services.Remove(signature);
+            return methods.Length != 0;
+        }
 
         // protected ServiceMethod? GetServiceMethod(in InvocationRequest request) =>
         //    GetServiceMethod(request.Service, request.Method);

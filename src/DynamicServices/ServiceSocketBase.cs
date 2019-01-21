@@ -45,7 +45,7 @@ namespace DynamicServices {
             IsRunning = true;
         }
         public void Stop() {
-            if (!IsRunning)
+            if (IsStopped)
                 throw new InvalidOperationException(@"Service Socket is not running");
             _Stop();
         }

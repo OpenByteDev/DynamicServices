@@ -43,7 +43,7 @@ namespace DynamicServices {
                 case MethodResponseType.Sync:
                     return serviceMethod.Invoke(arguments);
                 case MethodResponseType.Async:
-                    var task = Task.Run(async () => await (Task)serviceMethod.Invoke(arguments));
+                    var task = Task.Run(() => (Task)serviceMethod.Invoke(arguments));
                     if (task.Wait(InvocationTimeout))
                         return null;
                     else {
@@ -51,7 +51,7 @@ namespace DynamicServices {
                         return null;
                     }
                 case MethodResponseType.AsyncWithResult:
-                    var taskWithResult = Task.Run(async () => await (Task<object>)serviceMethod.Invoke(arguments));
+                    var taskWithResult = Task.Run(() => (Task<object>)serviceMethod.Invoke(arguments));
                     if (taskWithResult.Wait(InvocationTimeout))
                         return taskWithResult.Result;
                     else {
