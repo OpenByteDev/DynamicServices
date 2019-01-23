@@ -40,31 +40,35 @@ namespace DynamicServices.Tests {
         }
 
         [TestMethod]
-        public async Task AsyncClientHost() {
-            var address = @"localhost";
-            using (var host = new ServiceHost()) {
-                var port = host.BindRandomPort(address);
-                host.RegisterService<EchoService>();
-                host.Start();
-                using (var client = new ServiceClient()) {
-                    client.Connect(address, port);
-                    var service = client.GetServiceProxy<IEchoService>();
-                    client.Start();
+        public void AsyncClientHost() {
+            Core().GetAwaiter().GetResult();
 
-                    await EchoTest(42);
-                    await EchoTest(new byte[] { 1, 2, 3, 4, 5 });
-                    await EchoTest("̀(╯°□°）╯︵ ┻━┻");
+            async Task Core() {
+                var address = @"localhost";
+                using (var host = new ServiceHost()) {
+                    var port = host.BindRandomPort(address);
+                    host.RegisterService<EchoService>();
+                    host.Start();
+                    using (var client = new ServiceClient()) {
+                        client.Connect(address, port);
+                        var service = client.GetServiceProxy<IEchoService>();
+                        client.Start();
 
-                    async Task EchoTest(object value) {
-                        var echo = await service.EchoAsync(value);
-                        Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo));
-                        var echo2 = await service.EchoAsync2(value);
-                        Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo2));
+                        await EchoTest(42);
+                        await EchoTest(new byte[] { 1, 2, 3, 4, 5 });
+                        await EchoTest("̀(╯°□°）╯︵ ┻━┻");
+
+                        async Task EchoTest(object value) {
+                            var echo = await service.EchoAsync(value);
+                            Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo));
+                            var echo2 = await service.EchoAsync2(value);
+                            Assert.IsTrue(StructuralComparisons.StructuralEqualityComparer.Equals(value, echo2));
+                        }
+
+                        client.Shutdown();
                     }
-
-                    client.Shutdown();
+                    host.Shutdown();
                 }
-                host.Shutdown();
             }
         }
 
