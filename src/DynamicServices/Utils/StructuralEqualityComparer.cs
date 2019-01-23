@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace DynamicServices.Utils {
+namespace OpenByte.DynamicServices.Utils {
     // https://stackoverflow.com/questions/3609823/what-problem-does-istructuralequatable-and-istructuralcomparable-solve/5601068#5601068
     internal class StructuralEqualityComparer<T> : IEqualityComparer<T> {
 

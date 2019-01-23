@@ -1,14 +1,14 @@
 ﻿using Castle.DynamicProxy;
-using DynamicServices.Exceptions;
 using MessagePack;
 using NetMQ;
 using NetMQ.Sockets;
+using OpenByte.DynamicServices.Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using static DynamicServices.ServiceMethod;
+using static OpenByte.DynamicServices.ServiceMethod;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class ServiceClient : ServiceClientBase {
 
         public TimeSpan InvocationTimeout = DynamicServicesConfig.DefaultInvocationTimeout;

@@ -1,12 +1,12 @@
-﻿using DynamicServices.Exceptions;
+﻿using OpenByte.DynamicServices.Exceptions;
 using MessagePack;
 using NetMQ;
 using NetMQ.Sockets;
 using System;
 using System.Threading.Tasks;
-using static DynamicServices.ServiceMethod;
+using static OpenByte.DynamicServices.ServiceMethod;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class ServiceHost : ServiceHostBase {
 
         public TimeSpan InvocationTimeout = DynamicServicesConfig.DefaultInvocationTimeout;

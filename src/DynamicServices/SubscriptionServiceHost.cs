@@ -1,9 +1,9 @@
-﻿using DynamicServices.Exceptions;
+﻿using OpenByte.DynamicServices.Exceptions;
 using NetMQ;
 using NetMQ.Sockets;
-using static DynamicServices.ServiceMethod;
+using static OpenByte.DynamicServices.ServiceMethod;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class SubscriptionServiceHost : ServiceHostBase {
         
         public SubscriptionServiceHost() : base(new SubscriberSocket()) {

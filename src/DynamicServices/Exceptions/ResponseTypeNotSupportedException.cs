@@ -1,7 +1,7 @@
 ﻿using System;
-using static DynamicServices.ServiceMethod;
+using static OpenByte.DynamicServices.ServiceMethod;
 
-namespace DynamicServices.Exceptions {
+namespace OpenByte.DynamicServices.Exceptions {
     [Serializable]
     public class ResponseTypeNotSupportedException : NotSupportedException {
 

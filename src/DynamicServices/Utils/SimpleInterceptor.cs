@@ -1,7 +1,7 @@
 ﻿using Castle.DynamicProxy;
 using System;
 
-namespace DynamicServices.Utils {
+namespace OpenByte.DynamicServices.Utils {
     internal class SimpleInterceptor : IInterceptor {
 
         protected readonly Action<IInvocation> Interceptor;

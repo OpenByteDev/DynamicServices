@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Threading.Tasks;
 
-namespace DynamicServices.Tests {
+namespace OpenByte.DynamicServices.Tests {
     [TestClass]
     public class ClientHostTests {
 

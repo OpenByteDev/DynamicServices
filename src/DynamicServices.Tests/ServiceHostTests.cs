@@ -2,7 +2,7 @@
 using NetMQ;
 using System;
 
-namespace DynamicServices.Tests {
+namespace OpenByte.DynamicServices.Tests {
     [TestClass]
     public class ServiceHostTests {
         

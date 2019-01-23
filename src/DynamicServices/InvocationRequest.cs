@@ -5,7 +5,7 @@ using MessagePack;
 using System;
 using System.Linq;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     [MessagePackObject]
     public readonly struct InvocationRequest : IEquatable<InvocationRequest> {
 

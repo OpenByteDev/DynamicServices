@@ -1,7 +1,7 @@
 ﻿using NetMQ;
 using System;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public static class DynamicServicesConfig {
         
         public static void Cleanup(bool block=true) => NetMQConfig.Cleanup(block);

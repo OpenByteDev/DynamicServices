@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using Castle.DynamicProxy;
 
-namespace DynamicServices.Utils {
+namespace OpenByte.DynamicServices.Utils {
     internal class SimpleInterceptorSelector : IInterceptorSelector {
 
         protected readonly Func<Type, MethodInfo, IInterceptor[], IInterceptor[]> InterceptorSelector;

@@ -2,7 +2,7 @@
 using NetMQ;
 using NetMQ.Sockets;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class PublisherService : ServiceClientBase {
 
         protected readonly NetMQQueue<IInvocation> Queue;

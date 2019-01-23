@@ -1,13 +1,12 @@
 ﻿using Castle.DynamicProxy;
-using DynamicServices.Exceptions;
-using DynamicServices.Utils;
-using MessagePack;
+using OpenByte.DynamicServices.Exceptions;
+using OpenByte.DynamicServices.Utils;
 using NetMQ;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public abstract class ServiceSocketBase : IDisposable {
 
         protected const string DefaultProtocol = @"tcp";

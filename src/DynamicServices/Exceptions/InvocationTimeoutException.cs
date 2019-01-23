@@ -2,7 +2,7 @@
 using System;
 using System.Reflection;
 
-namespace DynamicServices.Exceptions {
+namespace OpenByte.DynamicServices.Exceptions {
     [Serializable]
     public class InvocationTimeoutException : TimeoutException {
 

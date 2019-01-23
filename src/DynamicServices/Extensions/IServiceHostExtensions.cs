@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public static class IServiceHostExtensions {
 
         public static void RegisterService<T>(this IServiceHost serviceHost) where T : class, new() => serviceHost?.RegisterService(new T(), typeof(T));

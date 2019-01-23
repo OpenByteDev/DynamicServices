@@ -1,7 +1,7 @@
 ﻿using System;
 using Castle.DynamicProxy;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class ServiceBuilder {
         
         private ProxyGenerator _ProxyGenerator;
