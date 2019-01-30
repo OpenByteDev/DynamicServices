@@ -23,7 +23,7 @@ namespace OpenByte.DynamicServices.Tests {
                     service.Log("fejkfehsjkfeshjkhjkfhesjkfhjkh");
                     service.Log("̀(╯°□°）╯︵ ┻━┻");
 
-                    Assert.IsTrue(service.Logs.Count == 2);
+                    Assert.AreEqual(service.Logs.Count, 2);
 
                     client.Shutdown();
                 }

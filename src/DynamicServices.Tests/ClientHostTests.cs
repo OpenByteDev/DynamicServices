@@ -40,7 +40,10 @@ namespace OpenByte.DynamicServices.Tests {
         }
 
         [TestMethod]
-        public async Task AsyncClientHost() {
+        public void AsyncClientHost() {
+            _AsyncClientHost().Wait();
+        }
+        public async Task _AsyncClientHost() {
             var address = @"localhost";
             using (var host = new ServiceHost()) {
                 var port = host.BindRandomPort(address);
