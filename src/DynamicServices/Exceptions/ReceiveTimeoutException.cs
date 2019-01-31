@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicServices.Exceptions {
+namespace OpenByte.DynamicServices.Exceptions {
     [Serializable]
     public class ReceiveTimeoutException : TimeoutException {
 

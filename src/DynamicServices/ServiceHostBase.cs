@@ -1,12 +1,12 @@
-﻿using DynamicServices.Exceptions;
-using DynamicServices.Utils;
+﻿using OpenByte.DynamicServices.Exceptions;
+using OpenByte.DynamicServices.Utils;
 using NetMQ;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public abstract class ServiceHostBase : ServiceSocketBase, IServiceHost {
 
         protected readonly IDictionary<byte[], ServiceMethod> Services = new Dictionary<byte[], ServiceMethod>(StructuralEqualityComparer<byte[]>.Default);
