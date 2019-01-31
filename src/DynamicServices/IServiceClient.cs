@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public interface IServiceClient {
 
         object GetServiceProxy(Type type, Type[] additionalInterfaces);

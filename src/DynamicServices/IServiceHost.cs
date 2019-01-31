@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public interface IServiceHost {
 
         void RegisterService(object service, Type[] interfaces);

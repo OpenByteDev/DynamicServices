@@ -1,9 +1,9 @@
 ﻿using Castle.DynamicProxy;
-using DynamicServices.Utils;
+using OpenByte.DynamicServices.Utils;
 using NetMQ;
 using System;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public abstract class ServiceClientBase : ServiceSocketBase, IServiceClient {
 
         public ServiceClientBase(NetMQSocket socket) : base(socket) { }

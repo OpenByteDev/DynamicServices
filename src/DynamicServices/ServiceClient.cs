@@ -1,14 +1,15 @@
 ﻿using Castle.DynamicProxy;
-using DynamicServices.Exceptions;
 using MessagePack;
 using NetMQ;
 using NetMQ.Sockets;
+using OpenByte.DynamicServices.Exceptions;
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using static DynamicServices.ServiceMethod;
+using static OpenByte.DynamicServices.ServiceMethod;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class ServiceClient : ServiceClientBase {
 
         public TimeSpan InvocationTimeout = DynamicServicesConfig.DefaultInvocationTimeout;
@@ -23,11 +24,13 @@ namespace DynamicServices {
         public ServiceClient(string connectionString) : this() { Connect(connectionString); }
         public ServiceClient(string scheme, string host, int port) : this() { Connect(scheme, host, port); }
         public ServiceClient(string host, int port) : this() { Connect(host, port); }
-
+        
         protected override void HandleInvocation(IInvocation invocation) {
             var responseType = ServiceMethod.GetResponseType(invocation);
 
-            var source = responseType != MethodResponseType.None ? new TaskCompletionSource<object>() : null;
+            var source = responseType != MethodResponseType.None ?
+                new TaskCompletionSource<object>()
+                : null;
             Queue.Enqueue((invocation, source));
 
             switch (responseType) {
@@ -40,12 +43,18 @@ namespace DynamicServices {
                         source.TrySetException(new InvocationTimeoutException(InvocationTimeout, invocation));
                         cancellationSource.Dispose();
                     }, useSynchronizationContext: false);
-                    source.Task.ContinueWith(_ => cancellationSource.Cancel(), TaskContinuationOptions.NotOnCanceled);
-                    invocation.ReturnValue = source.Task;
+                    var taskReturnType = invocation.Method.ReturnType;
+                    if (!taskReturnType.IsGenericType)
+                        invocation.ReturnValue = source.Task;
+                    else {
+                        var type = taskReturnType.GetGenericArguments()[0];
+                        var result = _CastTaskAsync.MakeGenericMethod(type).Invoke(null, new object[] { source.Task });
+                        invocation.ReturnValue = result;
+                    }
                     break;
                 case MethodResponseType.Sync:
                     if (source.Task.Wait(InvocationTimeout))
-                        invocation.ReturnValue = source.Task.Result;
+                        invocation.ReturnValue = source.Task.Result;  
                     else {
                         source.TrySetCanceled();
                         HandleError(source.Task.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, invocation));
@@ -56,7 +65,10 @@ namespace DynamicServices {
                     break;
             }
         }
-        
+        private static readonly MethodInfo _CastTaskAsync =
+            typeof(ServiceClient).GetMethod(nameof(CastTaskAsync), BindingFlags.NonPublic | BindingFlags.Static);
+        private async static Task<T> CastTaskAsync<T>(Task<object> task) => (T) await task;
+
         private void Queue_ReceiveReady(object sender, NetMQQueueEventArgs<(IInvocation, TaskCompletionSource<object>)> e) =>
             HandleQueueItem(e.Queue.Dequeue());
         // private static readonly MethodInfo _Deserializer = typeof(MessagePackSerializer).GetMethod("Deserialize", new Type[] { typeof(byte[]) });

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     internal static class MethodInfoExtensions {
 
         // https://stackoverflow.com/questions/940675/getting-a-delegate-from-methodinfo

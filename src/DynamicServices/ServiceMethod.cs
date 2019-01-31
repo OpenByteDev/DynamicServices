@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public readonly struct ServiceMethod : IEquatable<ServiceMethod> {
         
         public readonly string Name;

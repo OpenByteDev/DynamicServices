@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public static class ServiceClientExtensions {
 
         public static T GetServiceProxy<T>(this IServiceClient serviceClient) where T : class => serviceClient?.GetServiceProxy(typeof(T)) as T;

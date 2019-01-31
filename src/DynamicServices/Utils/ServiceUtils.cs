@@ -7,7 +7,7 @@ using System.Text;
 using Castle.DynamicProxy;
 using MessagePack;
 
-namespace DynamicServices.Utils {
+namespace OpenByte.DynamicServices.Utils {
     internal static class ServiceUtils {
 
         private static readonly HashAlgorithm _HashAlgorithm = MD5.Create();

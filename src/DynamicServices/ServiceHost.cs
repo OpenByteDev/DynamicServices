@@ -1,12 +1,13 @@
-﻿using DynamicServices.Exceptions;
+﻿using OpenByte.DynamicServices.Exceptions;
 using MessagePack;
 using NetMQ;
 using NetMQ.Sockets;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
-using static DynamicServices.ServiceMethod;
+using static OpenByte.DynamicServices.ServiceMethod;
 
-namespace DynamicServices {
+namespace OpenByte.DynamicServices {
     public class ServiceHost : ServiceHostBase {
 
         public TimeSpan InvocationTimeout = DynamicServicesConfig.DefaultInvocationTimeout;
@@ -30,13 +31,25 @@ namespace DynamicServices {
                 return;
             }
 
-            var result = InvoceServiceMethod(serviceMethod, arguments);
+            var result = InvokeServiceMethod(serviceMethod, arguments);
 
             if (!(result is null))
                 TrySendMultipartBytes(connection, MessagePackSerializer.Typeless.Serialize(result));
         }
 
-        private object InvoceServiceMethod(ServiceMethod serviceMethod, object[] arguments) {
+        private static readonly MethodInfo _InvokeServiceMethodAsyncWithResult =
+            typeof(ServiceHost).GetMethod(nameof(InvokeServiceMethodAsyncWithResult), BindingFlags.NonPublic | BindingFlags.Instance);
+        private T InvokeServiceMethodAsyncWithResult<T>(ServiceMethod serviceMethod, object[] arguments) {
+            var taskWithResult = Task.Run(new Func<Task<T>>(() => (Task<T>)serviceMethod.Invoke(arguments)));
+            if (taskWithResult.Wait(InvocationTimeout))
+                return taskWithResult.Result;
+            else {
+                HandleError(taskWithResult.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
+                return default;
+            }
+        }
+
+        private object InvokeServiceMethod(ServiceMethod serviceMethod, object[] arguments) {
             switch (serviceMethod.ResponseType) {
                 case MethodResponseType.None:
                     return null;
@@ -45,19 +58,15 @@ namespace DynamicServices {
                 case MethodResponseType.Async:
                     var task = Task.Run(() => (Task)serviceMethod.Invoke(arguments));
                     if (task.Wait(InvocationTimeout))
-                        return null;
+                        return 0;
                     else {
                         HandleError(task.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
                         return null;
                     }
                 case MethodResponseType.AsyncWithResult:
-                    var taskWithResult = Task.Run(() => (Task<object>)serviceMethod.Invoke(arguments));
-                    if (taskWithResult.Wait(InvocationTimeout))
-                        return taskWithResult.Result;
-                    else {
-                        HandleError(taskWithResult.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
-                        return null;
-                    }
+                    return _InvokeServiceMethodAsyncWithResult
+                        .MakeGenericMethod(serviceMethod.ReturnType.GetGenericArguments())
+                        .Invoke(this, new object[] { serviceMethod, arguments });
                 default:
                     HandleError(new ResponseTypeNotSupportedException(serviceMethod.ResponseType));
                     return null;
