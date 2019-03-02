@@ -31,25 +31,22 @@ namespace OpenByte.DynamicServices {
                 return;
             }
 
-            var result = InvokeServiceMethod(serviceMethod, arguments);
+            var result = TryInvokeServiceMethod(serviceMethod, arguments);
 
             if (!(result is null))
                 TrySendMultipartBytes(connection, MessagePackSerializer.Typeless.Serialize(result));
         }
 
-        private static readonly MethodInfo _InvokeServiceMethodAsyncWithResult =
-            typeof(ServiceHost).GetMethod(nameof(InvokeServiceMethodAsyncWithResult), BindingFlags.NonPublic | BindingFlags.Instance);
-        private T InvokeServiceMethodAsyncWithResult<T>(ServiceMethod serviceMethod, object[] arguments) {
-            var taskWithResult = Task.Run(new Func<Task<T>>(() => (Task<T>)serviceMethod.Invoke(arguments)));
-            if (taskWithResult.Wait(InvocationTimeout))
-                return taskWithResult.Result;
-            else {
-                HandleError(taskWithResult.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
-                return default;
+        protected object TryInvokeServiceMethod(ServiceMethod serviceMethod, object[] arguments) {
+            try {
+                return InvokeServiceMethod(serviceMethod, arguments);
+            } catch (Exception e) {
+                HandleError(e);
+                return null;
             }
         }
 
-        private object InvokeServiceMethod(ServiceMethod serviceMethod, object[] arguments) {
+        protected object InvokeServiceMethod(ServiceMethod serviceMethod, object[] arguments) {
             switch (serviceMethod.ResponseType) {
                 case MethodResponseType.None:
                     return null;
@@ -73,5 +70,18 @@ namespace OpenByte.DynamicServices {
             }
         }
 
+        private static readonly MethodInfo _InvokeServiceMethodAsyncWithResult =
+            typeof(ServiceHost).GetMethod(nameof(InvokeServiceMethodAsyncWithResult), BindingFlags.NonPublic | BindingFlags.Instance);
+        private T InvokeServiceMethodAsyncWithResult<T>(ServiceMethod serviceMethod, object[] arguments) {
+            var taskWithResult = Task.Run(new Func<Task<T>>(() => (Task<T>)serviceMethod.Invoke(arguments)));
+            if (taskWithResult.Wait(InvocationTimeout))
+                return taskWithResult.Result;
+            else {
+                HandleError(taskWithResult.Exception as Exception ?? new InvocationTimeoutException(InvocationTimeout, serviceMethod));
+                return default;
+            }
+        }
+
     }
 }
+
