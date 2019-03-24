@@ -51,6 +51,7 @@ var port = 5000;
 using (var host = new PublisherService(address, port)) {
     var proxy = host.GetServiceProxy<ILogService>();
     host.Start();
+    var service = new LogService();
     using (var client = new SubscriptionServiceHost(address, port)) {
         client.RegisterService(service);
         client.Start();
