@@ -46,11 +46,11 @@ namespace OpenByte.DynamicServices {
                     var taskReturnType = invocation.Method.ReturnType;
                     if (!taskReturnType.IsGenericType)
                         invocation.ReturnValue = source.Task;
-                    else {
-                        var type = taskReturnType.GetGenericArguments()[0];
-                        var result = _CastTaskAsync.MakeGenericMethod(type).Invoke(null, new object[] { source.Task });
-                        invocation.ReturnValue = result;
-                    }
+                    else 
+                        invocation.ReturnValue =
+                            _CastTaskAsync
+                                .MakeGenericMethod(taskReturnType.GetGenericArguments())
+                                .Invoke(null, new object[] { source.Task }); ;
                     break;
                 case MethodResponseType.Sync:
                     if (source.Task.Wait(InvocationTimeout))
@@ -67,7 +67,7 @@ namespace OpenByte.DynamicServices {
         }
         private static readonly MethodInfo _CastTaskAsync =
             typeof(ServiceClient).GetMethod(nameof(CastTaskAsync), BindingFlags.NonPublic | BindingFlags.Static);
-        private async static Task<T> CastTaskAsync<T>(Task<object> task) => (T) await task;
+        private async static Task<T> CastTaskAsync<T>(Task<object> task) => (T) await task.ConfigureAwait(false);
 
         private void Queue_ReceiveReady(object sender, NetMQQueueEventArgs<(IInvocation, TaskCompletionSource<object>)> e) =>
             HandleQueueItem(e.Queue.Dequeue());
